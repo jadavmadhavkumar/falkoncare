@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,24 +10,105 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
 import { useAppStore } from "@/lib/store"
+import { createClient } from "@/lib/supabase/client"
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { customer, updateCustomer } = useAppStore()
+  const supabase = createClient()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [formData, setFormData] = useState({
-    name: customer?.name || "",
-    mobile: customer?.mobile || "",
-    email: customer?.email || "",
-    address: customer?.address || "",
+    full_name: "",
+    phone_number: "",
+    email: "",
+    address: "",
   })
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          router.push("/auth/login")
+          return
+        }
+
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        if (profileError) throw profileError
+
+        setProfile(profileData)
+        setFormData({
+          full_name: profileData?.full_name || "",
+          phone_number: profileData?.phone_number || "",
+          email: profileData?.email || "",
+          address: profileData?.address || "",
+        })
+      } catch (err) {
+        console.error("Error fetching profile:", err)
+        setError(err instanceof Error ? err.message : "Failed to load profile")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [supabase, router])
 
   const handleSave = async () => {
     setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    updateCustomer(formData)
-    setIsEditing(false)
-    setIsSaving(false)
+    setError(null)
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError("User not authenticated")
+        return
+      }
+
+      const { error: updateError } = await supabase.from("profiles").update(formData).eq("id", user.id)
+
+      if (updateError) throw updateError
+
+      setProfile({ ...profile, ...formData })
+      updateCustomer({
+        name: formData.full_name,
+        mobile: formData.phone_number,
+        email: formData.email,
+        address: formData.address,
+      })
+      setIsEditing(false)
+    } catch (err) {
+      console.error("Error saving profile:", err)
+      setError(err instanceof Error ? err.message : "Failed to save profile")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopBar title="My Profile" />
+        <div className="flex items-center justify-center h-96">
+          <Icons.loader className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -57,6 +139,13 @@ export default function ProfilePage() {
               )}
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
             {/* Form Fields */}
             <div className="grid gap-4">
               <div className="space-y-2">
@@ -66,12 +155,12 @@ export default function ProfilePage() {
                 {isEditing ? (
                   <Input
                     id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.full_name}
+                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     className="bg-background border-input"
                   />
                 ) : (
-                  <p className="text-muted-foreground py-2">{customer?.name}</p>
+                  <p className="text-muted-foreground py-2">{profile?.full_name || "Not set"}</p>
                 )}
               </div>
 
@@ -82,14 +171,14 @@ export default function ProfilePage() {
                 {isEditing ? (
                   <Input
                     id="mobile"
-                    value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    value={formData.phone_number}
+                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                     className="bg-background border-input"
                   />
                 ) : (
                   <p className="text-muted-foreground py-2 flex items-center gap-2">
                     <Icons.phone className="w-4 h-4" />
-                    {customer?.mobile}
+                    {profile?.phone_number || "Not set"}
                   </p>
                 )}
               </div>
@@ -109,7 +198,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-muted-foreground py-2 flex items-center gap-2">
                     <Icons.mail className="w-4 h-4" />
-                    {customer?.email}
+                    {profile?.email || "Not set"}
                   </p>
                 )}
               </div>
@@ -129,7 +218,7 @@ export default function ProfilePage() {
                 ) : (
                   <p className="text-muted-foreground py-2 flex items-start gap-2">
                     <Icons.mapPin className="w-4 h-4 mt-0.5" />
-                    {customer?.address}
+                    {profile?.address || "Not set"}
                   </p>
                 )}
               </div>
@@ -150,11 +239,12 @@ export default function ProfilePage() {
                   onClick={() => {
                     setIsEditing(false)
                     setFormData({
-                      name: customer?.name || "",
-                      mobile: customer?.mobile || "",
-                      email: customer?.email || "",
-                      address: customer?.address || "",
+                      full_name: profile?.full_name || "",
+                      phone_number: profile?.phone_number || "",
+                      email: profile?.email || "",
+                      address: profile?.address || "",
                     })
+                    setError(null)
                   }}
                 >
                   Cancel
@@ -174,8 +264,8 @@ export default function ProfilePage() {
               <div className="p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">Member Since</p>
                 <p className="text-lg font-semibold text-foreground">
-                  {customer?.createdAt
-                    ? new Date(customer.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+                  {profile?.created_at
+                    ? new Date(profile.created_at).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
                     : "N/A"}
                 </p>
               </div>
@@ -183,7 +273,7 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Wallet Balance</p>
                 <p className="text-lg font-semibold text-foreground flex items-center">
                   <Icons.rupee className="w-4 h-4" />
-                  {customer?.walletBalance.toLocaleString() || 0}
+                  {(profile?.wallet_balance || 0).toLocaleString()}
                 </p>
               </div>
             </div>

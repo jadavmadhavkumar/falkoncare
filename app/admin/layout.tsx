@@ -1,30 +1,28 @@
-"use client"
-
 import type React from "react"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/dashboard/sidebar"
-import { useAppStore } from "@/lib/store"
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const { isAuthenticated, userRole } = useAppStore()
+  const supabase = await createClient()
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/auth/login")
-    } else if (userRole !== "admin") {
-      router.push("/dashboard")
-    }
-  }, [isAuthenticated, userRole, router])
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!isAuthenticated || userRole !== "admin") {
-    return null
+  if (!user) {
+    redirect("/auth/login")
+  }
+
+  // Get user profile to verify admin role
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+  if (profile?.role !== "admin") {
+    redirect("/dashboard")
   }
 
   return (

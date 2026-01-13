@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,27 +10,51 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
-import { useAppStore } from "@/lib/store"
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 export default function SignupPage() {
   const router = useRouter()
-  const { login } = useAppStore()
+  const signupUser = useMutation(api.users.signup)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
-    name: "",
-    mobile: "",
+    fullName: "",
+    phone: "",
     email: "",
     password: "",
     confirmPassword: "",
   })
 
-  const handleSignup = async () => {
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    login("customer")
-    router.push("/dashboard")
+    setError(null)
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      await signupUser({
+        email: formData.email,
+        password: formData.password,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        role: "customer",
+      })
+
+      // Redirect to dashboard on success
+      router.push("/dashboard")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred during signup")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -46,32 +72,35 @@ export default function SignupPage() {
             <CardDescription className="text-muted-foreground">Sign up to book your first service</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground">
+                <Label htmlFor="fullName" className="text-foreground">
                   Full Name
                 </Label>
                 <Input
-                  id="name"
+                  id="fullName"
                   type="text"
                   placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="bg-background border-input"
+                  required
+                  disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile" className="text-foreground">
-                  Mobile Number
+                <Label htmlFor="phone" className="text-foreground">
+                  Phone Number
                 </Label>
                 <Input
-                  id="mobile"
+                  id="phone"
                   type="tel"
                   placeholder="+91 98765 43210"
-                  value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="bg-background border-input"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -86,6 +115,8 @@ export default function SignupPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="bg-background border-input"
+                  required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -101,11 +132,14 @@ export default function SignupPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="bg-background border-input pr-10"
+                    required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
                   >
                     {showPassword ? <Icons.eyeOff className="w-4 h-4" /> : <Icons.eye className="w-4 h-4" />}
                   </button>
@@ -123,18 +157,31 @@ export default function SignupPage() {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className="bg-background border-input"
+                  required
+                  disabled={isLoading}
                 />
               </div>
-            </div>
 
-            <Button
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={handleSignup}
-              disabled={isLoading}
-            >
-              {isLoading ? <Icons.loader className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Create Account
-            </Button>
+              {error && <p className="text-sm text-red-500">{error}</p>}
+
+              <Button
+                type="submit"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Icons.loader className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <Icons.user className="w-4 h-4 mr-2" />
+                    Create Account
+                  </>
+                )}
+              </Button>
+            </form>
 
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}

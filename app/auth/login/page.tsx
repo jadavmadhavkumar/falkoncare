@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,24 +10,47 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
-import { useAppStore } from "@/lib/store"
+import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAppStore()
+  const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   })
 
-  const handleLogin = async (role: "customer" | "admin") => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    login(role)
-    router.push(role === "admin" ? "/admin" : "/dashboard")
+    setError(null)
+
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (authError) throw authError
+
+      // Get user profile to determine role
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+        const userRole = profile?.role || "customer"
+        router.push(userRole === "admin" ? "/admin" : "/dashboard")
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -43,18 +68,20 @@ export default function LoginPage() {
             <CardDescription className="text-muted-foreground">Login to your account to continue</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground">
-                  Email or Mobile
+                  Email
                 </Label>
                 <Input
                   id="email"
-                  type="text"
-                  placeholder="Enter your email or mobile"
+                  type="email"
+                  placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="bg-background border-input"
+                  required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -70,11 +97,14 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="bg-background border-input pr-10"
+                    required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
                   >
                     {showPassword ? <Icons.eyeOff className="w-4 h-4" /> : <Icons.eye className="w-4 h-4" />}
                   </button>
@@ -83,44 +113,34 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input type="checkbox" className="rounded border-input" />
+                  <input type="checkbox" className="rounded border-input" disabled={isLoading} />
                   Remember me
                 </label>
                 <Link href="#" className="text-sm text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
-            </div>
 
-            {/* Demo Login Buttons */}
-            <div className="space-y-3">
+              {error && <p className="text-sm text-red-500">{error}</p>}
+
               <Button
+                type="submit"
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => handleLogin("customer")}
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Icons.loader className="w-4 h-4 mr-2 animate-spin" />
+                  <>
+                    <Icons.loader className="w-4 h-4 mr-2 animate-spin" />
+                    Logging in...
+                  </>
                 ) : (
-                  <Icons.user className="w-4 h-4 mr-2" />
+                  <>
+                    <Icons.user className="w-4 h-4 mr-2" />
+                    Login
+                  </>
                 )}
-                Login as Customer
               </Button>
-
-              <Button
-                variant="outline"
-                className="w-full border-primary text-primary hover:bg-primary/5 bg-transparent"
-                onClick={() => handleLogin("admin")}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Icons.loader className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Icons.shield className="w-4 h-4 mr-2" />
-                )}
-                Login as Admin
-              </Button>
-            </div>
+            </form>
 
             <div className="text-center text-sm text-muted-foreground">
               Don't have an account?{" "}
