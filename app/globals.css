@@ -75,6 +75,7 @@
 }
 
 @theme inline {
+  /* Added font definitions */
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
   --color-background: var(--background);

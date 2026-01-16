@@ -10,12 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
-import { useMutation } from "convex/react"
-import { api } from "@/convex/_generated/api"
 
 export default function SignupPage() {
   const router = useRouter()
-  const signupUser = useMutation(api.users.signup)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,13 +37,23 @@ export default function SignupPage() {
     }
 
     try {
-      await signupUser({
-        email: formData.email,
-        password: formData.password,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        role: "customer",
-      })
+      // Simple local signup - store in localStorage for demo
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+
+      if (users.some((u: any) => u.email === formData.email)) {
+        setError("User already exists")
+        setIsLoading(false)
+        return
+      }
+
+      const newUser = {
+        id: Date.now().toString(),
+        ...formData,
+      }
+
+      users.push(newUser)
+      localStorage.setItem("users", JSON.stringify(users))
+      localStorage.setItem("currentUser", JSON.stringify(newUser))
 
       // Redirect to dashboard on success
       router.push("/dashboard")

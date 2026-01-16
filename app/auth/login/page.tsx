@@ -10,11 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
-import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,23 +27,16 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
+      // Simple local login - check localStorage
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+      const user = users.find((u: any) => u.email === formData.email && u.password === formData.password)
 
-      if (authError) throw authError
-
-      // Get user profile to determine role
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-
-        const userRole = profile?.role || "customer"
-        router.push(userRole === "admin" ? "/admin" : "/dashboard")
+      if (!user) {
+        throw new Error("Invalid email or password")
       }
+
+      localStorage.setItem("currentUser", JSON.stringify(user))
+      router.push("/dashboard")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -56,7 +47,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
           <Icons.droplets className="w-10 h-10 text-primary" />
           <span className="text-2xl font-bold text-foreground">Falkon</span>
@@ -64,8 +54,8 @@ export default function LoginPage() {
 
         <Card className="border-border bg-card">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-foreground">Welcome Back</CardTitle>
-            <CardDescription className="text-muted-foreground">Login to your account to continue</CardDescription>
+            <CardTitle className="text-2xl text-foreground">Login</CardTitle>
+            <CardDescription className="text-muted-foreground">Enter your credentials to continue</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleLogin} className="space-y-4">
@@ -111,16 +101,6 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input type="checkbox" className="rounded border-input" disabled={isLoading} />
-                  Remember me
-                </label>
-                <Link href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-
               {error && <p className="text-sm text-red-500">{error}</p>}
 
               <Button
@@ -134,10 +114,7 @@ export default function LoginPage() {
                     Logging in...
                   </>
                 ) : (
-                  <>
-                    <Icons.user className="w-4 h-4 mr-2" />
-                    Login
-                  </>
+                  "Login"
                 )}
               </Button>
             </form>

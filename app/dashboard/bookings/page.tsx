@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
-import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
@@ -14,56 +12,33 @@ type FilterType = "all" | "active" | "completed" | "cancelled"
 
 interface Booking {
   id: string
-  service_id: string
+  serviceId: string
   status: string
-  booking_date: string
-  booking_time: string
+  bookingDate: string
+  bookingTime: string
   amount: number
   address: string
-  tank_size?: string
-  tank_type?: string
-  created_at: string
+  tankSize?: string
+  tankType?: string
+  createdAt: string
 }
 
 export default function BookingsPage() {
-  const router = useRouter()
-  const supabase = createClient()
-  const [bookings, setBookings] = useState<any[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>("all")
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          router.push("/auth/login")
-          return
-        }
-
-        const { data, error: fetchError } = await supabase
-          .from("bookings")
-          .select("*")
-          .eq("customer_id", user.id)
-          .order("created_at", { ascending: false })
-
-        if (fetchError) throw fetchError
-
-        setBookings(data || [])
-      } catch (err) {
-        console.error("Error fetching bookings:", err)
-        setError(err instanceof Error ? err.message : "Failed to load bookings")
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      const bookingsData = JSON.parse(localStorage.getItem("bookings") || "[]")
+      setBookings(bookingsData)
+    } catch (err) {
+      setError("Failed to load bookings")
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchBookings()
-  }, [supabase, router])
+  }, [])
 
   const filteredBookings = bookings.filter((booking) => {
     if (filter === "all") return true
@@ -147,11 +122,11 @@ export default function BookingsPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Icons.calendar className="w-4 h-4" />
-                      {new Date(booking.booking_date).toLocaleDateString()}
+                      {new Date(booking.bookingDate).toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Icons.clock className="w-4 h-4" />
-                      {booking.booking_time}
+                      {booking.bookingTime}
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Icons.mapPin className="w-4 h-4" />

@@ -1,7 +1,8 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,87 +11,60 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Icons } from "@/components/icons"
 import { useAppStore } from "@/lib/store"
-import { createClient } from "@/lib/supabase/client"
 
 export default function ProfilePage() {
-  const router = useRouter()
   const { customer, updateCustomer } = useAppStore()
-  const supabase = createClient()
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [formData, setFormData] = useState({
-    full_name: "",
-    phone_number: "",
+    fullName: "",
+    phone: "",
     email: "",
     address: "",
   })
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (!user) {
-          router.push("/auth/login")
-          return
-        }
-
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single()
-
-        if (profileError) throw profileError
-
-        setProfile(profileData)
-        setFormData({
-          full_name: profileData?.full_name || "",
-          phone_number: profileData?.phone_number || "",
-          email: profileData?.email || "",
-          address: profileData?.address || "",
-        })
-      } catch (err) {
-        console.error("Error fetching profile:", err)
-        setError(err instanceof Error ? err.message : "Failed to load profile")
-      } finally {
-        setIsLoading(false)
-      }
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      setFormData({
+        fullName: currentUser.fullName || "",
+        phone: currentUser.phone || "",
+        email: currentUser.email || "",
+        address: currentUser.address || "",
+      })
+    } catch (err) {
+      setError("Failed to load profile")
+    } finally {
+      setIsLoading(false)
     }
+  }, [])
 
-    fetchProfile()
-  }, [supabase, router])
-
-  const handleSave = async () => {
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsSaving(true)
     setError(null)
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      const updatedUser = { ...currentUser, ...formData }
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser))
 
-      if (!user) {
-        setError("User not authenticated")
-        return
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+      const userIndex = users.findIndex((u: any) => u.id === updatedUser.id)
+      if (userIndex !== -1) {
+        users[userIndex] = updatedUser
+        localStorage.setItem("users", JSON.stringify(users))
       }
 
-      const { error: updateError } = await supabase.from("profiles").update(formData).eq("id", user.id)
-
-      if (updateError) throw updateError
-
-      setProfile({ ...profile, ...formData })
       updateCustomer({
-        name: formData.full_name,
-        mobile: formData.phone_number,
+        name: formData.fullName,
+        mobile: formData.phone,
         email: formData.email,
         address: formData.address,
       })
+
       setIsEditing(false)
     } catch (err) {
       console.error("Error saving profile:", err)
@@ -112,21 +86,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background p-8">
       <TopBar title="My Profile" />
 
-      <div className="p-6 max-w-2xl">
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-foreground">Profile Information</CardTitle>
-            {!isEditing && (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                <Icons.settings className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-6">
+      <Card className="mt-8 max-w-2xl">
+        <CardHeader>
+          <CardTitle>Profile Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSave} className="space-y-6">
             {/* Profile Picture */}
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -139,147 +107,111 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                <p className="text-sm text-destructive">{error}</p>
-              </div>
-            )}
-
-            {/* Form Fields */}
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-foreground">
-                  Full Name
-                </Label>
-                {isEditing ? (
-                  <Input
-                    id="name"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="bg-background border-input"
-                  />
-                ) : (
-                  <p className="text-muted-foreground py-2">{profile?.full_name || "Not set"}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="mobile" className="text-foreground">
-                  Mobile Number
-                </Label>
-                {isEditing ? (
-                  <Input
-                    id="mobile"
-                    value={formData.phone_number}
-                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                    className="bg-background border-input"
-                  />
-                ) : (
-                  <p className="text-muted-foreground py-2 flex items-center gap-2">
-                    <Icons.phone className="w-4 h-4" />
-                    {profile?.phone_number || "Not set"}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">
-                  Email Address
-                </Label>
-                {isEditing ? (
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="bg-background border-input"
-                  />
-                ) : (
-                  <p className="text-muted-foreground py-2 flex items-center gap-2">
-                    <Icons.mail className="w-4 h-4" />
-                    {profile?.email || "Not set"}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address" className="text-foreground">
-                  Address
-                </Label>
-                {isEditing ? (
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="bg-background border-input"
-                    rows={3}
-                  />
-                ) : (
-                  <p className="text-muted-foreground py-2 flex items-start gap-2">
-                    <Icons.mapPin className="w-4 h-4 mt-0.5" />
-                    {profile?.address || "Not set"}
-                  </p>
-                )}
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-foreground">
+                Full Name
+              </Label>
+              <Input
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                disabled={!isEditing || isSaving}
+                className="bg-background border-input"
+              />
             </div>
 
-            {isEditing && (
-              <div className="flex gap-3 pt-4">
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving && <Icons.loader className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Changes
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditing(false)
-                    setFormData({
-                      full_name: profile?.full_name || "",
-                      phone_number: profile?.phone_number || "",
-                      email: profile?.email || "",
-                      address: profile?.address || "",
-                    })
-                    setError(null)
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Account Stats */}
-        <Card className="bg-card border-border mt-6">
-          <CardHeader>
-            <CardTitle className="text-foreground">Account Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Member Since</p>
-                <p className="text-lg font-semibold text-foreground">
-                  {profile?.created_at
-                    ? new Date(profile.created_at).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
-                    : "N/A"}
-                </p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="text-lg font-semibold text-foreground flex items-center">
-                  <Icons.rupee className="w-4 h-4" />
-                  {(profile?.wallet_balance || 0).toLocaleString()}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">
+                Email
+              </Label>
+              <Input id="email" type="email" value={formData.email} disabled className="bg-background border-input" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-foreground">
+                Phone
+              </Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                disabled={!isEditing || isSaving}
+                className="bg-background border-input"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-foreground">
+                Address
+              </Label>
+              {isEditing ? (
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="bg-background border-input"
+                  rows={3}
+                />
+              ) : (
+                <p className="text-muted-foreground py-2 flex items-start gap-2">
+                  <Icons.mapPin className="w-4 h-4 mt-0.5" />
+                  {formData.address || "Not set"}
+                </p>
+              )}
+            </div>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <div className="flex gap-3">
+              {!isEditing ? (
+                <Button onClick={() => setIsEditing(true)} className="bg-primary hover:bg-primary/90">
+                  <Icons.edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
+                  <Button type="submit" disabled={isSaving} className="bg-primary hover:bg-primary/90">
+                    {isSaving ? (
+                      <>
+                        <Icons.loader className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancel
+                  </Button>
+                </>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Account Stats */}
+      <Card className="bg-card border-border mt-6">
+        <CardHeader>
+          <CardTitle>Account Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">Member Since</p>
+              <p className="text-lg font-semibold text-foreground">
+                {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+              </p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">Wallet Balance</p>
+              <p className="text-lg font-semibold text-foreground flex items-center">
+                <Icons.rupee className="w-4 h-4" />0
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
