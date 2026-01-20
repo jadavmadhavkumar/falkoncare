@@ -73,17 +73,16 @@ export function CalendarPicker({ onDateSelect, selectedDate }: CalendarPickerPro
               disabled={!day.isAvailable && day.isCurrentMonth}
               className={`
                 aspect-square rounded-lg text-sm font-medium flex items-center justify-center relative
-                transition-all duration-200
+                transition-all duration-200 hover:scale-110
                 ${!day.isCurrentMonth ? "text-muted-foreground bg-muted/30" : ""}
                 ${day.isToday ? "ring-2 ring-primary" : ""}
-                ${
-                  day.isAvailable && day.isCurrentMonth
-                    ? "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground cursor-pointer"
-                    : day.isCurrentMonth
-                      ? "bg-destructive/10 text-destructive cursor-not-allowed"
-                      : ""
+                ${day.isAvailable && day.isCurrentMonth
+                  ? "bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground cursor-pointer"
+                  : day.isCurrentMonth
+                    ? "bg-destructive/10 text-destructive cursor-not-allowed"
+                    : ""
                 }
-                ${selectedDate === day.date.toISOString().split("T")[0] ? "bg-primary text-primary-foreground ring-2 ring-primary" : ""}
+                ${selectedDate === day.date.toISOString().split("T")[0] ? "bg-primary text-primary-foreground ring-2 ring-primary scale-110" : ""}
               `}
             >
               {day.dayOfMonth}

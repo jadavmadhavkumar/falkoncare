@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { toast } from "sonner"
 import Image from "next/image"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,18 +10,30 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { serviceItems, serviceCategories } from "@/lib/mock-data"
 import { getServiceIcon, Icons } from "@/components/icons"
-import { useAppStore } from "@/lib/store"
+import { useMutation, useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
+// import { useAppStore } from "@/lib/store" // Removing store dependency for user/booking
 import { cn } from "@/lib/utils"
-import type { Booking } from "@/lib/types"
+// import type { Booking } from "@/lib/types" // Using Convex types implicitly or defined locally if needed
 import { CalendarPicker } from "@/components/booking/calendar-picker"
+import { LocationPicker } from "@/components/booking/location-picker"
 import { PaymentMethods } from "@/components/payment/payment-methods"
 import { WhatsAppButton } from "@/components/shared/whatsapp-button"
 import type { PaymentMethod } from "@/lib/types"
 
+import { useAuth } from "@clerk/nextjs"
+
 export default function ServiceBookingPage() {
   const params = useParams()
   const router = useRouter()
-  const { customer, addBooking, addNotification, updateWalletBalance, addWalletTransaction } = useAppStore()
+  const { isSignedIn, userId } = useAuth()
+
+  const user = useQuery(api.users.current);
+  const createBooking = useMutation(api.bookings.create);
+
+  // Debug logging
+  console.log("Clerk isSignedIn:", isSignedIn, "userId:", userId);
+  console.log("User from Convex query:", user);
 
   const service = serviceItems.find((s) => s.id === params.serviceId)
   const category = serviceCategories.find((c) => c.id === service?.categoryId)
@@ -31,6 +44,8 @@ export default function ServiceBookingPage() {
   const [selectedTankType, setSelectedTankType] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedAddress, setSelectedAddress] = useState<string>("")
+  const [selectedPincode, setSelectedPincode] = useState<string | undefined>(undefined)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>("wallet")
   const [notes, setNotes] = useState("")
   const [isBooking, setIsBooking] = useState(false)
@@ -68,59 +83,46 @@ export default function ServiceBookingPage() {
   }
 
   const canProceedStep2 = () => {
-    return selectedDate && selectedTime
+    return selectedDate && selectedTime && selectedAddress.trim() !== ""
   }
 
   const handleBooking = async () => {
-    if (!service || !customer) return
+    if (!service) {
+      toast.error("Service not found. Please try again.")
+      return
+    }
+
+    if (!isSignedIn) {
+      toast.error("Please log in to book a service")
+      return
+    }
 
     setIsBooking(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    const newBooking: Booking = {
-      id: `booking-${Date.now()}`,
-      customerId: customer.id,
-      serviceId: service.id,
-      serviceName: service.name,
-      date: selectedDate!,
-      time: selectedTime!,
-      status: "confirmed",
-      amount: totalPrice,
-      address: customer.address,
-      tankSize: selectedTankSize || undefined,
-      tankType: selectedTankType || undefined,
-      notes: notes || undefined,
-      createdAt: new Date(),
-    }
+    try {
+      await createBooking({
+        serviceName: service.name,
+        date: new Date(selectedDate!).getTime(), // Convex expects number (timestamp)
+        time: selectedTime!,
+        amount: totalPrice,
+        address: selectedAddress, // Use the selected address from location picker
+        tankSize: selectedTankSize || undefined,
+        tankType: selectedTankType || undefined,
+        paymentMethod: selectedPaymentMethod === "wallet" ? "wallet" : "cash",
+      });
 
-    addBooking(newBooking)
-
-    // Process payment based on selected method
-    if (selectedPaymentMethod === "wallet") {
-      if (customer.walletBalance >= totalPrice) {
-        updateWalletBalance(-totalPrice)
-        addWalletTransaction({
-          id: `wallet-${Date.now()}`,
-          customerId: customer.id,
-          amount: totalPrice,
-          type: "debit",
-          description: `Payment for ${service.name}`,
-          createdAt: new Date(),
-        })
+      toast.success("Booking confirmed successfully!")
+      setStep(5) // Success step
+    } catch (error: any) {
+      console.error(error);
+      if (error.message.includes("Insufficient wallet balance")) {
+        toast.error("Insufficient wallet balance. Please add funds or choose Cash.");
+      } else {
+        toast.error("Failed to create booking. Please try again.");
       }
+    } finally {
+      setIsBooking(false)
     }
-
-    addNotification({
-      id: `notif-${Date.now()}`,
-      userId: customer.id,
-      userType: "customer",
-      title: "Booking Confirmed",
-      message: `Your ${service.name} is scheduled for ${new Date(selectedDate!).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} at ${selectedTime} via ${selectedPaymentMethod}`,
-      read: false,
-      createdAt: new Date(),
-    })
-
-    setStep(5) // Success step
   }
 
   if (!service) {
@@ -324,6 +326,15 @@ export default function ServiceBookingPage() {
               </Card>
             </div>
 
+            {/* Location Picker */}
+            <LocationPicker
+              onLocationSelect={(address, pincode) => {
+                setSelectedAddress(address)
+                setSelectedPincode(pincode)
+              }}
+              initialAddress={selectedAddress}
+            />
+
             {/* Notes */}
             <Card className="bg-card border-border">
               <CardHeader>
@@ -435,8 +446,14 @@ export default function ServiceBookingPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Address</span>
-                    <span className="font-medium text-foreground text-right max-w-xs">{customer?.address}</span>
+                    <span className="font-medium text-foreground text-right max-w-xs">{selectedAddress || "Address not provided"}</span>
                   </div>
+                  {selectedPincode && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">PIN Code</span>
+                      <span className="font-medium text-foreground">{selectedPincode}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Price Breakdown */}

@@ -7,15 +7,29 @@ import Link from "next/link"
 
 interface TopBarProps {
   title: string
+  onMenuClick?: () => void
 }
 
-export function TopBar({ title }: TopBarProps) {
+export function TopBar({ title, onMenuClick }: TopBarProps) {
   const { customer, notifications } = useAppStore()
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-      <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6">
+      <div className="flex items-center gap-3">
+        {/* Mobile Menu Button */}
+        {onMenuClick && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onMenuClick}
+          >
+            <Icons.menu className="w-5 h-5" />
+          </Button>
+        )}
+        <h1 className="text-lg lg:text-xl font-semibold text-foreground">{title}</h1>
+      </div>
 
       <div className="flex items-center gap-4">
         {/* Wallet Balance */}

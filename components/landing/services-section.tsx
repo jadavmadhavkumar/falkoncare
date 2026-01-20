@@ -28,7 +28,7 @@ export function ServicesSection() {
             return (
               <Card
                 key={category.id}
-                className="group hover:shadow-lg transition-all duration-300 border-border hover:border-primary/30 bg-card flex flex-col"
+                className="group hover:shadow-xl transition-all duration-300 border-border hover:border-primary/30 bg-card flex flex-col hover:-translate-y-1"
               >
                 <CardHeader>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

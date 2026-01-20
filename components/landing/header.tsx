@@ -1,12 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isActive = (path: string) => pathname === path
+  const isHashActive = (hash: string) => false // Hash navigation is harder to track server-side, keeping simple for now
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50">
@@ -26,21 +38,32 @@ export function Header() {
           <nav className="hidden md:flex items-center gap-1">
             <Link
               href="#services"
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
+              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium relative group"
             >
               Services
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
             </Link>
             <Link
               href="/about"
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
+              className={`px-4 py-2 transition-colors font-medium relative group ${isActive("/about") ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               About
+              <span
+                className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary transition-transform duration-300 ${isActive("/about") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+              />
             </Link>
             <Link
               href="/careers"
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
+              className={`px-4 py-2 transition-colors font-medium relative group ${isActive("/careers") ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               Careers
+              <span
+                className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary transition-transform duration-300 ${isActive("/careers") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+              />
             </Link>
             <a
               href="https://wa.me/919876543210"
@@ -55,73 +78,135 @@ export function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="ghost" className="font-semibold">
-                Login
-              </Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg text-primary-foreground font-semibold">
-                Sign Up
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <Icons.menu className="w-6 h-6 text-foreground" />
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border/50 space-y-4 animate-in fade-in slide-in-from-top-2">
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="#services"
-                className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
-              >
-                Services
-              </Link>
-              <Link
-                href="/about"
-                className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
-              >
-                About
-              </Link>
-              <Link
-                href="/careers"
-                className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium"
-              >
-                Careers
-              </Link>
-              <a
-                href="https://wa.me/919876543210"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium flex items-center gap-1"
-              >
-                <Icons.whatsapp className="w-4 h-4" />
-                WhatsApp Us
-              </a>
-            </nav>
-            <div className="flex gap-2 pt-4 px-4">
-              <Link href="/auth/login" className="flex-1">
-                <Button variant="outline" className="w-full font-semibold bg-transparent">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="ghost" className="font-semibold">
                   Login
                 </Button>
-              </Link>
-              <Link href="/auth/signup" className="flex-1">
-                <Button className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold">
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg text-primary-foreground font-semibold">
                   Sign Up
                 </Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <Link href="/dashboard">
+                <Button variant="ghost" className="font-semibold">
+                  Dashboard
+                </Button>
               </Link>
-            </div>
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-10 w-10",
+                  },
+                }}
+              />
+            </SignedIn>
           </div>
-        )}
+
+          {/* Mobile Menu Button - Replaced with Sheet */}
+          {!mounted ? (
+            // Fallback for SSR - simple button without Sheet
+            <button className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors" aria-label="Menu">
+              <Icons.menu className="w-6 h-6 text-foreground" />
+            </button>
+          ) : (
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <button className="md:hidden p-2 hover:bg-muted rounded-lg transition-colors">
+                  <Icons.menu className="w-6 h-6 text-foreground" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="text-left flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-br from-primary to-secondary rounded-md">
+                      <Icons.droplets className="w-4 h-4 text-primary-foreground" />
+                    </div>
+                    Falkon
+                  </SheetTitle>
+                  <SheetDescription className="text-left">
+                    Professional Water Tank Cleaning
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col gap-6 mt-8">
+                  <nav className="flex flex-col gap-2">
+                    <Link
+                      href="#services"
+                      className="px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium select-none flex items-center justify-between group"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Services
+                      <Icons.arrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                    <Link
+                      href="/about"
+                      className={`px-4 py-3 rounded-md transition-colors font-medium select-none flex items-center justify-between group ${isActive("/about")
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      About
+                      {isActive("/about") && <Icons.checkCircle className="w-4 h-4" />}
+                    </Link>
+                    <Link
+                      href="/careers"
+                      className={`px-4 py-3 rounded-md transition-colors font-medium select-none flex items-center justify-between group ${isActive("/careers")
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Careers
+                      {isActive("/careers") && <Icons.checkCircle className="w-4 h-4" />}
+                    </Link>
+                    <a
+                      href="https://wa.me/919876543210"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium flex items-center gap-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Icons.whatsapp className="w-4 h-4" />
+                      WhatsApp Us
+                    </a>
+                  </nav>
+                  <div className="flex flex-col gap-3 pt-4 border-t border-border">
+                    <SignedOut>
+                      <SignInButton mode="modal">
+                        <Button variant="outline" className="w-full font-semibold justify-center" onClick={() => setMobileMenuOpen(false)}>
+                          Login
+                        </Button>
+                      </SignInButton>
+                      <SignUpButton mode="modal">
+                        <Button
+                          className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground font-semibold justify-center shadow-lg shadow-primary/20"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          Sign Up
+                        </Button>
+                      </SignUpButton>
+                    </SignedOut>
+                    <SignedIn>
+                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full font-semibold justify-center">
+                          Dashboard
+                        </Button>
+                      </Link>
+                      <div className="flex justify-center py-2">
+                        <UserButton afterSignOutUrl="/" showName />
+                      </div>
+                    </SignedIn>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
       </div>
     </header>
   )

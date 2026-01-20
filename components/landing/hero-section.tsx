@@ -16,25 +16,25 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Content */}
           <div className="space-y-6 md:space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary/10 rounded-full text-primary text-xs sm:text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary/10 rounded-full text-primary text-xs sm:text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Icons.droplets className="w-3 h-3 sm:w-4 sm:h-4" />
               Trusted by 10,000+ Customers
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight text-balance">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight text-balance animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 fill-mode-forwards opacity-0">
               Professional <span className="text-primary">Water Tank</span> Cleaning Service
             </h1>
 
-            <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 fill-mode-forwards opacity-0">
               Keep your water safe and clean with our expert tank cleaning services. We provide thorough cleaning,
               sanitization, and maintenance for all types of water tanks.
             </p>
 
-            <div className="flex flex-col xs:flex-row gap-3 sm:gap-4">
+            <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-forwards opacity-0">
               <Link href="/auth/login" className="flex-1 xs:flex-none">
                 <Button
                   size="lg"
-                  className="w-full xs:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base"
+                  className="w-full xs:w-auto bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base transition-transform hover:scale-105 active:scale-95 duration-200"
                 >
                   Book Now
                   <Icons.arrowRight className="w-4 h-4 ml-2" />
@@ -44,7 +44,7 @@ export function HeroSection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full xs:w-auto border-primary text-primary hover:bg-primary/5 bg-transparent text-sm sm:text-base"
+                  className="w-full xs:w-auto border-primary text-primary hover:bg-primary/5 bg-transparent text-sm sm:text-base transition-transform hover:scale-105 active:scale-95 duration-200"
                 >
                   View Services
                 </Button>
@@ -79,8 +79,8 @@ export function HeroSection() {
           </div>
 
           {/* Hero Image */}
-          <div className="relative lg:pl-8 mt-8 lg:mt-0">
-            <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl">
+          <div className="relative lg:pl-8 mt-8 lg:mt-0 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 fill-mode-forwards opacity-0">
+            <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl transition-transform hover:scale-[1.02] duration-500">
               <img src="/water-tank-cleaning-service.jpg" alt="Water Tank Cleaning Service" className="w-full h-auto" />
               <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 bg-background/95 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg">
                 <div className="flex items-center justify-between gap-2">

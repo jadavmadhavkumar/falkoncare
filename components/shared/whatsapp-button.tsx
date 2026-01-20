@@ -12,7 +12,7 @@ interface WhatsAppButtonProps {
 }
 
 export function WhatsAppButton({
-  phoneNumber = "+919876543210", // Falkon support number
+  phoneNumber = "+91 70113 65481", // Falkon support number
   message = "Hello! I'm interested in your water tank cleaning services.",
   className = "",
   variant = "default",

@@ -25,6 +25,7 @@ import {
   Menu,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   CreditCard,
   FileText,
   MessageSquare,
@@ -48,6 +49,7 @@ import {
   Target,
   Award,
   Zap,
+  Edit,
 } from "lucide-react"
 
 export const Icons = {
@@ -77,6 +79,7 @@ export const Icons = {
   menu: Menu,
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
+  arrowUpRight: ArrowUpRight,
   creditCard: CreditCard,
   fileText: FileText,
   messageSquare: MessageSquare,
@@ -100,6 +103,7 @@ export const Icons = {
   target: Target,
   award: Award,
   zap: Zap,
+  edit: Edit,
 }
 
 export function getServiceIcon(iconName: string) {
@@ -153,6 +157,7 @@ export function getServiceIcon(iconName: string) {
     target: Target,
     award: Award,
     zap: Zap,
+    edit: Edit,
   }
   return iconMap[iconName] || Droplets
 }

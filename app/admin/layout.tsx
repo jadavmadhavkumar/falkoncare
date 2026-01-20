@@ -1,15 +1,18 @@
-import type React from "react"
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { ReactNode } from "react";
+import { Sidebar } from "@/components/admin/sidebar"; // We'll create this or reuse existing sidebar logic
+import { TopBar } from "@/components/dashboard/top-bar";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar userRole="admin" />
-      <main className="ml-64">{children}</main>
+    <div className="flex h-screen bg-muted/30">
+      <Sidebar />
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <TopBar title="Admin Dashboard" />
+        <div className="flex-1 overflow-auto p-4 md:p-8">
+          {children}
+        </div>
+      </main>
     </div>
-  )
+  );
 }
