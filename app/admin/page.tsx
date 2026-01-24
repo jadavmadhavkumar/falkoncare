@@ -1,6 +1,9 @@
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
+
+// Force dynamic rendering to prevent static generation issues with Convex
+export const dynamic = 'force-dynamic';
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
