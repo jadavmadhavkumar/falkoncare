@@ -17,7 +17,7 @@ export function HeroSection() {
           {/* Content */}
           <div className="space-y-6 md:space-y-8">
             <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary/10 rounded-full text-primary text-xs sm:text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Icons.droplets className="w-3 h-3 sm:w-4 sm:h-4" />
+              <Icons.falcon className="w-3 h-3 sm:w-4 sm:h-4" />
               Trusted by 10,000+ Customers
             </div>
 

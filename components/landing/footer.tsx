@@ -11,7 +11,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Icons.droplets className="w-8 h-8 text-primary" />
+              <Icons.falcon className="w-8 h-8 text-primary" />
               <span className="text-xl font-bold">Falkon Care</span>
             </div>
             <p className="text-background/70 text-sm">

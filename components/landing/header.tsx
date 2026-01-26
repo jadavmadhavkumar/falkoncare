@@ -27,7 +27,7 @@ export function Header() {
           {/* Improved logo styling with better visual weight */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:shadow-lg transition-shadow">
-              <Icons.droplets className="w-6 h-6 text-primary-foreground" />
+              <Icons.falcon className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Falkon Care
@@ -131,7 +131,7 @@ export function Header() {
                 <SheetHeader>
                   <SheetTitle className="text-left flex items-center gap-2">
                     <div className="p-1.5 bg-gradient-to-br from-primary to-secondary rounded-md">
-                      <Icons.droplets className="w-4 h-4 text-primary-foreground" />
+                      <Icons.falcon className="w-4 h-4 text-primary-foreground" />
                     </div>
                     Falkon Care
                   </SheetTitle>

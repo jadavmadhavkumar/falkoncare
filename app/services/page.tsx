@@ -30,7 +30,7 @@ export default function ServicesPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-6">
-                <Icons.droplets className="w-4 h-4" />
+                <Icons.falcon className="w-4 h-4" />
                 Professional Water Tank Cleaning
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">

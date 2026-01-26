@@ -56,7 +56,27 @@ import {
   UserPlus,
 } from "lucide-react"
 
+// Custom Falcon Bird Icon Component
+const FalconIcon = ({ className = "", ...props }: { className?: string; [key: string]: any }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <path d="M12 3c-1.2 0-2.4.3-3.5 1-1.1.7-2 1.8-2.5 3-.5 1.2-.5 2.6 0 3.8.5 1.2 1.4 2.3 2.5 3 .6.4 1.2.7 1.9.9l-.8 3.5c-.1.5.1 1 .5 1.3.4.3.9.3 1.3.1l1-1.8c.2-.4.4-.8.5-1.2.3-.9 1-.5 1.4.2.4.7.8 1.5 1.2 2.3l1 1.8c.4.2.9.2 1.3-.1.4-.3.6-.8.5-1.3l-.8-3.5c.7-.2 1.3-.5 1.9-.9 1.1-.7 2-1.8 2.5-3 .5-1.2.5-2.6 0-3.8-.5-1.2-1.4-2.3-2.5-3C14.4 3.3 13.2 3 12 3z" />
+    <path d="M8 8c-.2.5-.3 1-.3 1.5 0 .5.1 1 .3 1.5M16 8c.2.5.3 1 .3 1.5 0 .5-.1 1-.3 1.5" opacity="0.3" />
+    <circle cx="10.5" cy="7.5" r="0.8" fill="currentColor" />
+    <circle cx="13.5" cy="7.5" r="0.8" fill="currentColor" />
+  </svg>
+)
+
 export const Icons = {
+  falcon: FalconIcon,
   droplets: Droplets,
   pipette: Pipette,
   filter: Filter,

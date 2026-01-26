@@ -71,8 +71,8 @@ export function Sidebar({ userRole }: SidebarProps) {
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           {!collapsed && (
             <Link href="/" className="flex items-center gap-2">
-              <Icons.droplets className="w-8 h-8 text-primary" />
-              <span className="text-xl font-bold text-foreground">Falkon</span>
+              <Icons.falcon className="w-8 h-8 text-primary" />
+              <span className="text-xl font-bold text-foreground">Falkon Care</span>
             </Link>
           )}
           <button
