@@ -3,8 +3,9 @@ import { Footer } from "@/components/landing/footer"
 import { Icons } from "@/components/icons"
 
 export const metadata = {
-  title: "About Us - Falkon Water Tank Cleaning",
-  description: "Learn about Falkon Futurex Private Limited, India's trusted water tank cleaning service provider.",
+  title: "About Falkon Care - Professional Water Tank Cleaning Service in Delhi NCR",
+  description: "Learn about Falkon Care (Falkon Futurex Private Limited), Delhi NCR's most trusted water tank cleaning service provider. Serving 10,000+ customers across Delhi, Noida, Gurgaon, Faridabad & Ghaziabad.",
+  keywords: "Falkon Care, about Falkon Care, water tank cleaning company Delhi, professional tank cleaning NCR",
 }
 
 export default function AboutPage() {
@@ -14,9 +15,9 @@ export default function AboutPage() {
       <main className="container mx-auto px-4 py-16">
         {/* Page Header */}
         <div className="max-w-3xl mx-auto mb-16">
-          <h1 className="text-4xl font-bold text-foreground mb-4">About Falkon</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">About Falkon Care</h1>
           <p className="text-lg text-muted-foreground">
-            Dedicated to providing professional water tank cleaning and maintenance services across India.
+            Dedicated to providing professional water tank cleaning and maintenance services across Delhi NCR - Your trusted partner for clean and safe water.
           </p>
         </div>
 
@@ -28,13 +29,14 @@ export default function AboutPage() {
               <div>
                 <h2 className="text-2xl font-bold text-foreground mb-4">Company Overview</h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Falkon Futurex Private Limited is a professionally managed water tank cleaning and maintenance service
-                  provider established in 2025. We are committed to ensuring clean, safe, and hygienic water storage for
-                  homes and businesses across India.
+                  <strong>Falkon Care</strong> (Falkon Futurex Private Limited) is Delhi NCR's leading water tank cleaning
+                  and maintenance service provider established in 2025. We are committed to ensuring clean, safe, and hygienic
+                  water storage for homes and businesses across Delhi, Noida, Gurgaon, Faridabad, and Ghaziabad.
                 </p>
                 <p className="text-muted-foreground leading-relaxed">
-                  With a mission to revolutionize water tank maintenance, we combine modern technology with expert
-                  craftsmanship to deliver exceptional service quality.
+                  With a mission to revolutionize water tank maintenance in Delhi NCR, we combine modern technology with expert
+                  craftsmanship to deliver exceptional service quality. Trusted by 10,000+ customers, Falkon Care has become
+                  the preferred choice for professional water tank cleaning services.
                 </p>
               </div>
 
@@ -70,16 +72,18 @@ export default function AboutPage() {
               <div>
                 <h2 className="text-2xl font-bold text-foreground mb-4">Our Mission</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  To provide reliable, professional, and affordable water tank cleaning and maintenance services that
-                  ensure safe, clean water for every household and business.
+                  To provide reliable, professional, and affordable water tank cleaning and maintenance services across
+                  Delhi NCR that ensure safe, clean water for every household and business. Falkon Care aims to set the
+                  highest standards in water tank hygiene and customer satisfaction.
                 </p>
               </div>
 
               <div>
                 <h2 className="text-2xl font-bold text-foreground mb-4">Our Vision</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  To become the most trusted and preferred water tank cleaning service provider in India, setting
-                  industry standards for quality, reliability, and customer satisfaction.
+                  To become the most trusted and preferred water tank cleaning service provider in Delhi NCR and across India,
+                  setting industry standards for quality, reliability, and customer satisfaction. Falkon Care envisions a future
+                  where every home and business has access to clean, safe water through professional tank maintenance.
                 </p>
               </div>
 
@@ -110,7 +114,7 @@ export default function AboutPage() {
 
         {/* Why Choose Us */}
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-2xl font-bold text-foreground mb-8">Why Choose Falkon?</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-8">Why Choose Falkon Care?</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-card border border-border rounded-lg p-6">
               <Icons.award className="w-12 h-12 text-primary mb-4" />

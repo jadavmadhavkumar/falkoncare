@@ -22,13 +22,19 @@ export function HeroSection() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight text-balance animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 fill-mode-forwards opacity-0">
-              Professional <span className="text-primary">Water Tank</span> Cleaning Service
+              <span className="text-primary">Falkon Care</span> - Professional Water Tank Cleaning Service in Delhi NCR
             </h1>
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200 fill-mode-forwards opacity-0">
-              Keep your water safe and clean with our expert tank cleaning services. We provide thorough cleaning,
-              sanitization, and maintenance for all types of water tanks.
+              Falkon Care provides expert water tank cleaning services in Delhi, Noida, Gurgaon, Faridabad, and Ghaziabad.
+              Professional residential & commercial tank cleaning with certified technicians. Safe, hygienic, and affordable
+              water tank sanitization near you.
             </p>
+</text>
+
+<old_text line=78>
+            <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+              <img src="/water-tank-cleaning-service.jpg" alt="Water Tank Cleaning Service" className="w-full h-auto" />
 
             <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-forwards opacity-0">
               <Link href="/auth/login" className="flex-1 xs:flex-none">
@@ -81,7 +87,7 @@ export function HeroSection() {
           {/* Hero Image */}
           <div className="relative lg:pl-8 mt-8 lg:mt-0 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300 fill-mode-forwards opacity-0">
             <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl transition-transform hover:scale-[1.02] duration-500">
-              <img src="/water-tank-cleaning-service.jpg" alt="Water Tank Cleaning Service" className="w-full h-auto" />
+              <img src="/water-tank-cleaning-service.jpg" alt="Falkon Care Water Tank Cleaning Service in Delhi NCR - Professional Technicians Cleaning Residential Water Tank" className="w-full h-auto" />
               <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4 bg-background/95 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg">
                 <div className="flex items-center justify-between gap-2">
                   <div>

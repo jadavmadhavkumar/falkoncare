@@ -30,18 +30,22 @@ export function Header() {
               <Icons.droplets className="w-6 h-6 text-primary-foreground" />
             </div>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Falkon
+              Falkon Care
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             <Link
-              href="#services"
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium relative group"
+              href="/services"
+              className={`px-4 py-2 transition-colors font-medium relative group ${isActive("/services") ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               Services
-              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+              <span
+                className={`absolute bottom-0 left-0 w-full h-0.5 bg-primary transition-transform duration-300 ${isActive("/services") ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  }`}
+              />
             </Link>
             <Link
               href="/about"
@@ -129,7 +133,7 @@ export function Header() {
                     <div className="p-1.5 bg-gradient-to-br from-primary to-secondary rounded-md">
                       <Icons.droplets className="w-4 h-4 text-primary-foreground" />
                     </div>
-                    Falkon
+                    Falkon Care
                   </SheetTitle>
                   <SheetDescription className="text-left">
                     Professional Water Tank Cleaning
@@ -138,12 +142,15 @@ export function Header() {
                 <div className="flex flex-col gap-6 mt-8">
                   <nav className="flex flex-col gap-2">
                     <Link
-                      href="#services"
-                      className="px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium select-none flex items-center justify-between group"
+                      href="/services"
+                      className={`px-4 py-3 rounded-md transition-colors font-medium select-none flex items-center justify-between group ${isActive("/services")
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Services
-                      <Icons.arrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {isActive("/services") ? <Icons.checkCircle className="w-4 h-4" /> : <Icons.arrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
                     </Link>
                     <Link
                       href="/about"

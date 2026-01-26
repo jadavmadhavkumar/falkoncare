@@ -12,10 +12,10 @@ export function ServicesSection() {
       <div className="container mx-auto px-4 sm:px-6 md:px-8">
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 md:mb-4 text-balance">
-            Our Services
+            Falkon Care Water Tank Cleaning Services in Delhi NCR
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
-            Comprehensive water tank and pipe services to ensure clean, safe water for your home and business.
+            Professional water tank cleaning services for residential and commercial properties across Delhi, Noida, Gurgaon, Faridabad & Ghaziabad.
           </p>
         </div>
 
@@ -66,11 +66,16 @@ export function ServicesSection() {
           })}
         </div>
 
-        <div className="text-center">
+        <div className="text-center flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/auth/login">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm sm:text-base">
-              Book a Service
+              Book a Service Now
               <Icons.arrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+          <Link href="/services">
+            <Button size="lg" variant="outline" className="text-sm sm:text-base">
+              View All Services
             </Button>
           </Link>
         </div>
