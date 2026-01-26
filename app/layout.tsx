@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   title: "Falkon - Water Tank Cleaning Services",
   description: "Professional water tank cleaning and maintenance services",
   generator: "v0.app",
+  verification: {
+    google: "n-XZA7UKEKi7cmgZ7LoA6uh0cEbO2h4dCtBdvNXyTxw",
+  },
   icons: {
     icon: [
       {
