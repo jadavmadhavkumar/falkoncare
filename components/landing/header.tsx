@@ -26,8 +26,12 @@ export function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Improved logo styling with better visual weight */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg group-hover:shadow-lg transition-shadow">
-              <Icons.falcon className="w-6 h-6 text-primary-foreground" />
+            <div className="relative w-10 h-10 md:w-12 md:h-12 group-hover:shadow-lg transition-shadow">
+              <img 
+                src="/Gemini_Generated_Image_rwpfd0rwpfd0rwpf.png" 
+                alt="Falkon Care Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Falkon Care
@@ -69,15 +73,6 @@ export function Header() {
                   }`}
               />
             </Link>
-            <a
-              href="https://wa.me/919876543210"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors font-medium flex items-center gap-1"
-            >
-              <Icons.whatsapp className="w-4 h-4" />
-              Contact
-            </a>
           </nav>
 
           {/* Auth Buttons */}
@@ -130,8 +125,12 @@ export function Header() {
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                 <SheetHeader>
                   <SheetTitle className="text-left flex items-center gap-2">
-                    <div className="p-1.5 bg-gradient-to-br from-primary to-secondary rounded-md">
-                      <Icons.falcon className="w-4 h-4 text-primary-foreground" />
+                    <div className="relative w-8 h-8">
+                      <img 
+                        src="/Gemini_Generated_Image_rwpfd0rwpfd0rwpf.png" 
+                        alt="Falkon Care Logo" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     Falkon Care
                   </SheetTitle>
@@ -174,16 +173,6 @@ export function Header() {
                       Careers
                       {isActive("/careers") && <Icons.checkCircle className="w-4 h-4" />}
                     </Link>
-                    <a
-                      href="https://wa.me/919876543210"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium flex items-center gap-2"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Icons.whatsapp className="w-4 h-4" />
-                      WhatsApp Us
-                    </a>
                   </nav>
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
                     <SignedOut>

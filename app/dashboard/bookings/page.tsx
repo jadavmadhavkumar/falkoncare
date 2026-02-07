@@ -1,33 +1,35 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { Icons } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { BookingCard } from "@/components/dashboard/booking-card"
-import { LocalBookingManager, LocalBooking } from "@/lib/local-storage"
+// import { LocalBookingManager, LocalBooking } from "@/lib/local-storage"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 type FilterType = "all" | "active" | "completed" | "cancelled"
 
 export default function BookingsPage() {
-  const { user, isLoaded } = useUser()
-  const [bookings, setBookings] = useState<LocalBooking[]>([])
+  const { isLoaded } = useUser()
+  const bookings = useQuery(api.bookings.getByUser)
   const [filter, setFilter] = useState<FilterType>("all")
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    if (isLoaded && user) {
-      const userBookings = LocalBookingManager.getUserBookings(user.id)
-      setBookings(userBookings)
-      setIsLoading(false)
-    }
-  }, [user, isLoaded])
+  // Map Convex bookings to the shape expected by BookingCard (handling _id vs id)
+  const formattedBookings = (bookings || []).map(b => ({
+    ...b,
+    id: b._id,
+    tankSize: b.tankSize || undefined,
+    tankType: b.tankType || undefined
+  }))
 
-  const filteredBookings = bookings.filter((booking) => {
+  const isLoading = bookings === undefined
+
+  const filteredBookings = formattedBookings.filter((booking) => {
     if (filter === "all") return true
     if (filter === "active") return ["pending", "confirmed", "in-progress"].includes(booking.status)
     if (filter === "completed") return booking.status === "completed"
@@ -90,7 +92,8 @@ export default function BookingsPage() {
         ) : filteredBookings.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredBookings.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
+              // @ts-ignore - BookingCard expects LocalBooking but we pass mapped Convex booking
+              <BookingCard key={booking.id} booking={booking as any} />
             ))}
           </div>
         ) : (

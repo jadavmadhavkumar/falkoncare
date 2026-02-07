@@ -42,6 +42,44 @@ export const getByClerkId = query({
   },
 });
 
+// Ensure user exists in Convex (called from client)
+export const ensureUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    console.log("JWT Verification - ensureUser identity:", identity);
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (user) {
+      // Hack for testing: Top up wallet if empty
+      if ((user.walletBalance || 0) < 5000) {
+        await ctx.db.patch(user._id, { walletBalance: 5000 });
+      }
+      return user._id;
+    }
+
+    // Create new user
+    const now = Date.now();
+    return await ctx.db.insert("users", {
+      clerkId: identity.subject,
+      email: identity.email || "",
+      fullName: identity.name || "",
+      imageUrl: identity.pictureUrl || "",
+      role: "user",
+      walletBalance: 5000,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
 // Create user (called by webhook)
 export const createUser = internalMutation({
   args: {
@@ -132,7 +170,7 @@ export const updateProfile = mutation({
         fullName: fullName || identity.name || "",
         imageUrl: identity.pictureUrl || "",
         role: "user",
-        walletBalance: 0,
+        walletBalance: 5000,
         address,
         phoneNumber,
         createdAt: Date.now(),

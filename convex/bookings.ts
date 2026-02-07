@@ -1,5 +1,14 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
+
+// Error constants for consistent error handling
+export const ERRORS = {
+    INSUFFICIENT_WALLET_BALANCE: "INSUFFICIENT_WALLET_BALANCE",
+    UNAUTHENTICATED: "UNAUTHENTICATED",
+    UNAUTHORIZED: "UNAUTHORIZED",
+    BOOKING_NOT_FOUND: "BOOKING_NOT_FOUND",
+    CANNOT_CANCEL: "CANNOT_CANCEL",
+} as const;
 
 // Public query to get all bookings (admin only, but kept public for demo)
 export const get = query({
@@ -49,8 +58,9 @@ export const create = mutation({
     },
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
+        console.log("identity in bookings:create", identity);
         if (!identity) {
-            throw new Error("Unauthenticated call to create booking");
+            throw new ConvexError(ERRORS.UNAUTHENTICATED);
         }
 
         // Get user to check wallet balance if paying with wallet
@@ -63,7 +73,7 @@ export const create = mutation({
         let paymentStatus = "pending";
         if (args.paymentMethod === "wallet") {
             if (!user || !user.walletBalance || user.walletBalance < args.amount) {
-                throw new Error("Insufficient wallet balance");
+                throw new ConvexError(ERRORS.INSUFFICIENT_WALLET_BALANCE);
             }
             // Deduct from wallet
             await ctx.db.patch(user._id, {

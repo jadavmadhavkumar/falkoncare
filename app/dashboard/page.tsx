@@ -6,29 +6,22 @@ import { BookingCard } from "@/components/dashboard/booking-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
-import { useAppStore } from "@/lib/store"
+// import { useAppStore } from "@/lib/store"
 import Link from "next/link"
-import { LocalBookingManager } from "@/lib/local-storage"
+// import { LocalBookingManager } from "@/lib/local-storage"
 import { useUser } from "@clerk/nextjs"
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 export default function DashboardPage() {
-  const { user, isLoaded } = useUser()
+  const { isLoaded } = useUser()
 
-  // Use LocalBookingManager for bookings and wallet data
-  const bookings = user ? LocalBookingManager.getUserBookings(user.id) : [];
-  const walletBalance = LocalBookingManager.getWalletBalance();
-
-  const userData = user ? {
-    clerkId: user.id,
-    email: user.emailAddresses?.[0]?.emailAddress || "",
-    fullName: user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-    imageUrl: user.imageUrl || "",
-    role: "user",
-    walletBalance: walletBalance,
-  } : null;
+  // Use Convex queries
+  const bookings = useQuery(api.bookings.getByUser)
+  const convexUser = useQuery(api.users.current)
 
   // Show loading state while user is loading
-  if (!isLoaded) {
+  if (!isLoaded || bookings === undefined) {
     return (
       <div className="min-h-screen bg-background">
         <TopBar title="Dashboard" />
@@ -42,8 +35,16 @@ export default function DashboardPage() {
     )
   }
 
-  const activeBookings = bookings.filter((b) => ["pending", "confirmed", "in-progress"].includes(b.status))
-  const completedBookings = bookings.filter((b) => b.status === "completed")
+  // Format bookings for display (handle _id)
+  const formattedBookings = (bookings || []).map(b => ({
+    ...b,
+    id: b._id,
+    tankSize: b.tankSize || undefined,
+    tankType: b.tankType || undefined
+  }))
+
+  const activeBookings = formattedBookings.filter((b) => ["pending", "confirmed", "in-progress"].includes(b.status))
+  const completedBookings = formattedBookings.filter((b) => b.status === "completed")
   const totalSpent = completedBookings.reduce((sum, b) => sum + b.amount, 0)
 
   return (
@@ -53,7 +54,7 @@ export default function DashboardPage() {
       <div className="p-6 space-y-6">
         {/* Welcome Section */}
         <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-6 text-primary-foreground">
-          <h2 className="text-2xl font-bold mb-2">Welcome back, {userData?.fullName?.split(" ")[0] || "User"}!</h2>
+          <h2 className="text-2xl font-bold mb-2">Welcome back, {convexUser?.fullName?.split(" ")[0] || "User"}!</h2>
           <p className="text-primary-foreground/80 mb-4">
             Your water tanks are in good hands. Book your next service today.
           </p>
@@ -71,7 +72,7 @@ export default function DashboardPage() {
           <StatsCard title="Completed Services" value={completedBookings.length} icon={Icons.checkCircle} />
           <StatsCard
             title="Wallet Balance"
-            value={`₹${userData?.walletBalance?.toLocaleString() || 0}`}
+            value={`₹${convexUser?.walletBalance?.toLocaleString() || 0}`}
             icon={Icons.wallet}
           />
           <StatsCard title="Total Spent" value={`₹${totalSpent.toLocaleString()}`} icon={Icons.trending} />
@@ -92,7 +93,8 @@ export default function DashboardPage() {
             {activeBookings.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-4">
                 {activeBookings.slice(0, 2).map((booking) => (
-                  <BookingCard key={booking.id} booking={booking} />
+                  // @ts-ignore
+                  <BookingCard key={booking.id} booking={booking as any} />
                 ))}
               </div>
             ) : (

@@ -14,26 +14,28 @@ import { cn } from "@/lib/utils"
 import { CalendarPicker } from "@/components/booking/calendar-picker"
 import { LocationPicker } from "@/components/booking/location-picker"
 import { PaymentMethods } from "@/components/payment/payment-methods"
-import { WhatsAppButton } from "@/components/shared/whatsapp-button"
 import type { PaymentMethod } from "@/lib/types"
-
-import { LocalBookingManager } from "@/lib/local-storage"
+import Link from "next/link"
+// import { LocalBookingManager } from "@/lib/local-storage"
 
 import { useUser } from "@clerk/nextjs"
+import { useMutation, useQuery, useConvexAuth } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
 export default function ServiceBookingPage() {
   const params = useParams()
   const router = useRouter()
   // const { isSignedIn, userId } = useAuth()
   const { user: clerkUser, isLoaded, isSignedIn } = useUser();
+  const { isAuthenticated } = useConvexAuth();
 
-  // Use only Clerk user data with local storage
-  const walletBalance = LocalBookingManager.getWalletBalance();
-  const user = clerkUser ? {
-    clerkId: clerkUser.id,
-    email: clerkUser.emailAddresses?.[0]?.emailAddress || "",
-    fullName: clerkUser.fullName || `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
-    walletBalance: walletBalance,
+  // Use Convex for user data and wallet balance
+  const userData = useQuery(api.users.current);
+  const user = userData ? {
+    clerkId: userData.clerkId,
+    email: userData.email,
+    fullName: userData.fullName || "",
+    walletBalance: userData.walletBalance || 0,
   } : null;
 
   // Debug logging
@@ -91,13 +93,15 @@ export default function ServiceBookingPage() {
     return selectedDate && selectedTime && selectedAddress.trim() !== ""
   }
 
+  const createBooking = useMutation(api.bookings.create);
+
   const handleBooking = async () => {
     if (!service) {
       toast.error("Service not found. Please try again.")
       return
     }
 
-    if (!isLoaded || !isSignedIn) {
+    if (!isLoaded || !isAuthenticated) {
       toast.error("Please log in to book a service")
       return
     }
@@ -105,43 +109,32 @@ export default function ServiceBookingPage() {
     setIsBooking(true)
 
     try {
-      // Handle wallet payment check
-      if (selectedPaymentMethod === "wallet" && user && user.walletBalance < totalPrice) {
-        toast.error("Insufficient wallet balance. Please add funds or choose Cash payment.");
-        setIsBooking(false);
-        return;
-      }
-
-      // Create booking using LocalBookingManager
-      const bookingData = LocalBookingManager.addBooking({
+      // Create booking using Convex mutation
+      const bookingId = await createBooking({
         serviceName: service.name,
         date: new Date(selectedDate!).getTime(),
         time: selectedTime!,
         amount: totalPrice,
         address: selectedAddress,
-        tankSize: selectedTankSize,
-        tankType: selectedTankType,
+        tankSize: selectedTankSize || undefined,
+        tankType: selectedTankType || undefined,
         paymentMethod: selectedPaymentMethod === "wallet" ? "wallet" : "cash",
-        userId: clerkUser?.id || "",
       });
 
-      // Update wallet balance if paid via wallet
-      if (selectedPaymentMethod === "wallet") {
-        const success = LocalBookingManager.deductFromWallet(totalPrice);
-        if (!success) {
-          // Remove the booking if wallet deduction failed
-          LocalBookingManager.deleteBooking(bookingData.id);
-          setIsBooking(false);
-          return;
-        }
-      }
-
-      console.log("Booking created successfully:", bookingData);
+      console.log("Booking created successfully:", bookingId);
       toast.success("Booking confirmed successfully!")
       setStep(5) // Success step
     } catch (error: any) {
       console.error("Booking error:", error);
-      toast.error("Failed to create booking. Please try again.");
+
+      // Handle specific error types
+      if (error.message === "INSUFFICIENT_WALLET_BALANCE") {
+        toast.error("Insufficient wallet balance. Please recharge your wallet to continue.");
+      } else if (error.message === "UNAUTHENTICATED") {
+        toast.error("Please log in to book a service.");
+      } else {
+        toast.error(error.message || "Failed to create booking. Please try again.");
+      }
     } finally {
       setIsBooking(false)
     }
@@ -400,6 +393,43 @@ export default function ServiceBookingPage() {
               amount={totalPrice}
             />
 
+            {/* Wallet Balance Warning */}
+            {selectedPaymentMethod === "wallet" && user && (
+              <Card className={cn(
+                "border-2",
+                user.walletBalance < totalPrice
+                  ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900"
+                  : "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900"
+              )}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Wallet Balance</p>
+                      <p className={cn(
+                        "text-2xl font-bold flex items-center mt-1",
+                        user.walletBalance < totalPrice ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
+                      )}>
+                        <Icons.rupee className="w-5 h-5" />
+                        {user.walletBalance.toLocaleString()}
+                      </p>
+                    </div>
+                    {user.walletBalance < totalPrice && (
+                      <Link href="/dashboard/wallet">
+                        <Button variant="outline" size="sm" className="border-red-500 text-red-600 hover:bg-red-50">
+                          Recharge Wallet
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                  {user.walletBalance < totalPrice && (
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                      ⚠️ Insufficient balance. You need ₹{(totalPrice - user.walletBalance).toLocaleString()} more to complete this booking.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Button
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               size="lg"
@@ -493,22 +523,22 @@ export default function ServiceBookingPage() {
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="flex justify-center">
               <Button
                 variant="outline"
                 size="lg"
                 onClick={handleBooking}
-                disabled={isBooking}
-                className="border-green-500 text-green-600 hover:bg-green-50 bg-transparent"
+                disabled={isBooking || (selectedPaymentMethod === "wallet" && user && user.walletBalance < totalPrice)}
+                className={cn(
+                  "border-green-500 text-green-600 hover:bg-green-50 bg-transparent",
+                  selectedPaymentMethod === "wallet" && user && user.walletBalance < totalPrice && "opacity-50 cursor-not-allowed"
+                )}
               >
                 <Icons.check className="w-4 h-4 mr-2" />
-                Confirm Booking
+                {selectedPaymentMethod === "wallet" && user && user.walletBalance < totalPrice
+                  ? "Insufficient Balance"
+                  : "Confirm Booking"}
               </Button>
-              <WhatsAppButton
-                phoneNumber="+919876543210"
-                message={`Hi Falkon! I want to book ${service.name} for ${selectedDate} at ${selectedTime}`}
-                size="lg"
-              />
             </div>
           </div>
         )}
@@ -540,21 +570,6 @@ export default function ServiceBookingPage() {
             </div>
 
             <div className="space-y-3">
-              <WhatsAppButton
-                phoneNumber="+919876543210"
-                bookingDetails={{
-                  serviceName: service.name,
-                  date: selectedDate ? new Date(selectedDate).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric"
-                  }) : "",
-                  time: selectedTime || "",
-                  address: selectedAddress || "",
-                  amount: totalPrice
-                }}
-                message="Hi Falkon! I have confirmed my booking and want to discuss further details."
-              />
               <Button variant="outline" size="lg" onClick={() => router.push("/dashboard")} className="w-full">
                 <Icons.home className="w-4 h-4 mr-2" />
                 Back to Dashboard

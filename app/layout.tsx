@@ -64,21 +64,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/falcon-light.svg",
-        media: "(prefers-color-scheme: light)",
-        type: "image/svg+xml",
-      },
-      {
-        url: "/falcon-dark.svg",
-        media: "(prefers-color-scheme: dark)",
-        type: "image/svg+xml",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
+        url: "/icon.png",
+        type: "image/png",
       },
     ],
-    apple: "/apple-falcon-icon.svg",
+    apple: "/icon.png",
   },
 }
 

@@ -11,7 +11,13 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Icons.falcon className="w-8 h-8 text-primary" />
+              <div className="relative w-10 h-10">
+                <img 
+                  src="/Gemini_Generated_Image_rwpfd0rwpfd0rwpf.png" 
+                  alt="Falkon Care Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <span className="text-xl font-bold">Falkon Care</span>
             </div>
             <p className="text-background/70 text-sm">

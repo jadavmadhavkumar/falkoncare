@@ -1,36 +1,32 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { TopBar } from "@/components/dashboard/top-bar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Icons } from "@/components/icons"
-import { LocalBookingManager, LocalBooking } from "@/lib/local-storage"
+// import { LocalBookingManager, LocalBooking } from "@/lib/local-storage"
 import { mockStaff } from "@/lib/mock-data"
 import Link from "next/link"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 
 export default function BookingDetailsPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isLoaded } = useUser()
-  const [booking, setBooking] = useState<LocalBooking | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { isLoaded } = useUser()
 
-  useEffect(() => {
-    if (isLoaded && user) {
-      const userBookings = LocalBookingManager.getUserBookings(user.id)
-      const foundBooking = userBookings.find((b) => b.id === params.bookingId)
-      setBooking(foundBooking || null)
-      setLoading(false)
-    }
-  }, [user, isLoaded, params.bookingId])
+  const bookingId = params.bookingId as Id<"bookings">
+  const booking = useQuery(api.bookings.getById, { id: bookingId })
+  const cancelBooking = useMutation(api.bookings.cancel)
 
-  const assignedStaff = null // Remove staff assignment for now
+  const assignedStaff: any = null // Remove staff assignment for now
 
-  if (loading || !isLoaded) {
+  if (!isLoaded || booking === undefined) {
     return (
       <div className="min-h-screen bg-background">
         <TopBar title="Loading..." />
@@ -41,7 +37,7 @@ export default function BookingDetailsPage() {
     )
   }
 
-  if (!booking) {
+  if (booking === null) {
     return (
       <div className="min-h-screen bg-background">
         <TopBar title="Booking Not Found" />
@@ -55,8 +51,8 @@ export default function BookingDetailsPage() {
     )
   }
 
-  const handleCancelBooking = () => {
-    updateBookingStatus(booking.id, "cancelled")
+  const handleCancelBooking = async () => {
+    await cancelBooking({ id: bookingId })
   }
 
   return (
@@ -75,7 +71,7 @@ export default function BookingDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Booking ID</p>
-                <p className="font-mono text-foreground">{booking.id}</p>
+                <p className="font-mono text-foreground">{booking._id}</p>
               </div>
               <StatusBadge status={booking.status} className="text-sm px-4 py-1" />
             </div>
@@ -194,7 +190,7 @@ export default function BookingDetailsPage() {
         {/* Actions */}
         <div className="flex gap-3">
           {booking.status === "completed" && (
-            <Link href={`/dashboard/bookings/${booking.id}/feedback`} className="flex-1">
+            <Link href={`/dashboard/bookings/${booking._id}/feedback`} className="flex-1">
               <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Icons.star className="w-4 h-4 mr-2" />
                 Rate Service
