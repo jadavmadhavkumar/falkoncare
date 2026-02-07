@@ -54,10 +54,12 @@ import {
   Code,
   LogIn,
   UserPlus,
+  Building,
+  HelpCircle,
 } from "lucide-react"
 
 // Custom Falcon Bird Icon Component
-const FalconIcon = ({ className = "", ...props }: { className?: string; [key: string]: any }) => (
+const FalconIcon = ({ className = "", ...props }: { className?: string;[key: string]: any }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -132,6 +134,8 @@ export const Icons = {
   login: LogIn,
   userPlus: UserPlus,
   database: Database,
+  building: Building,
+  helpCircle: HelpCircle,
 }
 
 export function getServiceIcon(iconName: string) {
